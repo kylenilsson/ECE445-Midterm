@@ -10,6 +10,8 @@ class SATSolver:
 
         for item in self.clauses:
             for i in item:
+                if(i.find('~') != 1):        #Get list of literals. If NOT in front removes it. [x1, x2, x3] and no ~x1, ~x2 in list 
+                    i=i.replace('~', '')
                 if i not in self.literals:
                     self.literals.append(i)
 
@@ -39,56 +41,54 @@ class SATSolver:
                 return True
         return False  # If decision_tree is empty, no further backtracking is possible
 
-    def solve(clauses):
+    def solve(self):  # Note the removal of `clauses` argument
         """
         Solves the SAT formula using the DPLL algorithm with unit propagation.
 
-        Args:
-            clauses: A list of lists representing clauses (literals combined with OR).
-
         Returns:
-            A dictionary representing the solution assignment (variable: truth value) 
+            A dictionary representing the solution assignment (variable: truth value)
             or None if the formula is unsatisfiable.
         """
-        # Initialize assignment with all variables False
-        assignment = {var for clause in clauses for var in clause if var[0] != '~'}
-        assignment = {var: False for var in assignment}
+
+        assignment = {var: False for var in self.literals}  # Initialize with False
 
         while True:
-            # Unit propagation
-            if not unit_propagation(clauses, assignment):
+            if not self.unit_propagation(assignment):
                 return None
 
-            # Check if all clauses are satisfied
-            if all(all(assignment[abs(lit)] for lit in clause) for clause in clauses):
+            # Check if all clauses are satisfied using self.clauses
+            if all(any(assignment[abs(lit)] for lit in clause) for clause in self.clauses):
                 return assignment
-        
 
-    def unit_propagation(clauses, assignment):
+            # If no conflict or satisfaction, make a decision
+            variable = self.pick_unassigned_literal()  # Implement this function for decision-making
+            self.decide(variable, True)
+
+            # If backtracking is needed, release the unsat branch
+            if self.backtrack():
+                self.release_unsat_branch()
+
+            # Alternatively, explore both branches for completeness
+            # else:
+            #     self.decide(variable, False)
+                
+    def unit_propagation(self, assignment):
+        """2
+        Performs unit propagation on the current assignment using self.clauses.
         """
-        Performs unit propagation on the current assignment and clauses.
 
-        Args:
-            clauses: A list of lists representing clauses (literals combined with OR).
-            assignment: A dictionary mapping variables to truth values (True/False/None).
-
-        Returns:
-            A boolean indicating if unit propagation resulted in a conflict (False) 
-            or a modified assignment with new deductions (True).
-        """
         changes = False
-        for clause in clauses.copy():  # Iterate over a copy to avoid modifying original list
+        for clause in self.clauses.copy():  # Iterate over a copy of self.clauses
             unassigned_literals = [lit for lit in clause if assignment[abs(lit)] is None]
-            if len(unassigned_literals) == 0:
-            # Conflict detected, formula cannot be satisfied
-                return False
+            if not unassigned_literals:
+                return False  # Conflict
             elif len(unassigned_literals) == 1:
                 literal = unassigned_literals[0]
                 assignment[abs(literal)] = True if literal > 0 else False
                 changes = True
-                clauses.remove(clause)  # Can remove satisfied clause
+                self.clauses.remove(clause)  # Can remove satisfied clause from self.clauses
         return changes
-
+    
     def release_unsat_branch(self):
         """Releases all data for the current UNSAT branch."""
         while self.decision_tree:
