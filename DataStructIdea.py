@@ -1,7 +1,7 @@
 class SATSolver:
     def __init__(self, clauses):
         self.clauses = clauses  # A list of clauses where each clause is a list of integers representing literals
-        self.assignments = {}  # Maps variable (int) to a boolean value
+        self.assignment = {}  # Maps variable (int) to a boolean value
         self.decision_tree = []  # Stack to track decisions and implications (for backtracking)
         self.unit_clauses = []  # Track unit clauses for efficient propagation
         self.literals = [] #Contains all the literals present in CNF
@@ -16,7 +16,7 @@ class SATSolver:
                     self.literals.append(i)
 
         for literal in self.literals:        #Makes dictionary of literals all with an unassigned value. {x1: None, x2: None, ...}
-            self.assignments[literal]= None
+            self.assignment[literal]= None
 
 
  #   def add_clause(self, clause):
@@ -50,11 +50,11 @@ class SATSolver:
             or None if the formula is unsatisfiable.
         """
 
-        assignment = {var: False for var in self.literals}  # Initialize with False
+       # assignment = {var: None for var in self.literals}  # Initialize with None
 
-        while True:
-            if not self.unit_propagation(assignment):
-                return None
+        while True:         #loops until a solution is found or proven UNSAT
+            if not self.unit_propagation(self.assignment):    #Calls unit_propogation to simply equation with 1 unassigned literal
+                return None    #If conflict is detected, reutrn None for UNSAT and termiante loop
 
             # Check if all clauses are satisfied using self.clauses
             if all(any(assignment[abs(lit)] for lit in clause) for clause in self.clauses):
@@ -79,15 +79,30 @@ class SATSolver:
 
         changes = False
         for clause in self.clauses.copy():  # Iterate over a copy of self.clauses
-            unassigned_literals = [lit for lit in clause if assignment[abs(lit)] is None]
-            if not unassigned_literals:
+            
+             # It creates a list named unassigned_clauses. It iterates through the literals in the clause list
+            #It checks if the corresponding variable assignment in the assignment dictionary is None. This indicates an unassigned literal.
+            #If any are unassigned, the literal is added to the unassigned_clause list.
+
+            #I beleive this is incorret syntax
+            unassigned_clauses =[]
+            for literal, value in assignment:
+                if(value == None):
+                    unassigned_clauses.append(clause)
+
+
+            if not unassigned_clauses:  #Signifies UNSAT formuala if all literals in clause are assigned and no SAT formuala.
                 return False  # Conflict
-            elif len(unassigned_literals) == 1:
-                literal = unassigned_literals[0]
-                assignment[abs(literal)] = True if literal > 0 else False
+            
+            elif len(clause) == 1:
+                literal = unassigned_clauses[0]
+                if (assignment[literal].find('~') != 1):
+                    assignment[literal]=False
+                else:
+                    assignment[literal]=True
                 changes = True
                 self.clauses.remove(clause)  # Can remove satisfied clause from self.clauses
-        return changes
+        return changes      #Returns chagnes flag signifying to solve that there is no conflict and equaiton is updated
     
     def release_unsat_branch(self):
         """Releases all data for the current UNSAT branch."""
@@ -106,5 +121,3 @@ if solution is None:
   print("No solution found")
 else:
   print("Solution:", solution)
-
-# Here, you would add methods to implement unit propagation, the actual CDCL algorithm steps, etc.
