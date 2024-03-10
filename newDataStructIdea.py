@@ -2,21 +2,24 @@ import random
 
 class SATSolver:
     def __init__(self, clauses):
-        self.clauses = clauses  # A list of clauses where each clause is a list of literals
-        self.assignment = {}  # Maps literals to their truth values
-        self.decision_tree = []  # Stack to track decisions and implications (for backtracking)
-        self.literals = []  # Contains all the literals present in the CNF
+        self.clauses = clauses
+        self.assignment = {}
+        self.decision_tree = []
+        self.literals = []
 
         # Initialize assignment with all literals set to None and extract literals from clauses
         for item in self.clauses:
             for i in item:
-                if(i.find('~') != 1):        #Get list of literals. If NOT in front removes it. [x1, x2, x3] and no ~x1, ~x2 in list 
-                    i=i.replace('~', '')
-                if i not in self.literals:
-                    self.literals.append(i)
+                # Remove negation if present to ensure consistency
+                if i[0] == '~':
+                    literal = i[1:]
+                else:
+                    literal = i
 
-        for literal in self.literals:        #Makes dictionary of literals all with an unassigned value. {x1: None, x2: None, ...}
-            self.assignment[literal]= None
+                if literal not in self.literals:
+                    self.literals.append(literal)
+                    # Initialize assignment with all literals set to None
+                    self.assignment[literal] = None
 
     def print_literals(self):
         """Prints out the list of literals and their dictionaries."""
@@ -30,58 +33,48 @@ class SATSolver:
         for clause in self.clauses:
             print(clause)
 
-    def unit_propagation(self, literals):
-        """Performs unit propagation according to the specified rules."""
-        # Check for unit clauses
-        unit_clauses = [clause for clause in self.clauses if len(clause) == 1 and self.assignment[clause[0]] is None]
-
-        # If there are unit clauses
-        if unit_clauses:
-            for clause in unit_clauses:
-                literal = clause[0]
-                if literal[0] == '~':  # Negation of literal
-                    self.assignment[literal[1:]] = False
-                else:
-                    self.assignment[literal] = True
-            return True  # Unit propagation succeeded
-
-        # Check for satisfied clauses or clauses with literals set to True
-        
-        satisfiable_clauses = [clause for clause in self.clauses if any(self.assignment[lit] is True for lit in clause)]
-        self.clauses = [clause for clause in self.clauses if clause not in satisfiable_clauses]
-
-        # If no unit clauses and no satisfied clauses, randomly assign a literal
-        if not unit_clauses and not satisfiable_clauses:
-            literal_to_assign = random.choice([lit for lit, val in self.assignment.items() if val is None])
-            self.decide(literal_to_assign, random.choice([True, False]))
-            return True  # Random assignment made
-
-        return False  # No unit clauses and no random assignment made
-
     def decide(self, literal, value):
         """Make a decision and add it to the decision tree."""
         self.assignment[literal] = value
         self.decision_tree.append((literal, value))
+        print(f"Decision: {literal} = {value}")
 
     def solve(self):
         """Solves the SAT formula using the specified rules."""
+        self.unit_propagation(self.literals)
+        return self.assignment
+    
+    def backtrack(self):
+        """Undo decisions and implications until reaching a decision that can be inverted."""
+        while self.decision_tree:
+            literal, value = self.decision_tree.pop()
+            self.assignment[literal] = None
+
+    def unit_propagation(self, literals):
+        
         while True:
-            if not self.unit_propagation(self.literals):
-                return None  # If conflict is detected or no more decisions can be made, return None
+            unit_clauses = [clause for clause in self.clauses if len(clause) == 1]
+            if not unit_clauses:
+                break
 
-            # Check if all clauses are satisfied
-            if all(any(self.assignment[lit] is True for lit in clause) for clause in self.clauses):
-                return self.assignment  # Return satisfying assignment
+            unit_clause = unit_clauses[0]
+            literal = unit_clause[0]
+            value = True if literal[0] != '~' else False
+            literal = literal[1:] if literal[0] == '~' else literal
+            self.decide(literal, value)
+            self.clauses = [c for c in self.clauses if literal not in c]
+            self.clauses = [c for c in self.clauses if f"~{literal}" not in c]
+            self.unit_propagation(literals)
 
-            # If no conflict and some clauses remain, branch the decision tree
-            unassigned_literals = [lit for lit, val in self.assignment.items() if val is None]
-            literal_to_branch = random.choice(unassigned_literals)
-            self.decide(literal_to_branch, random.choice([True, False]))
+            if all([len(c) == 0 for c in self.clauses]):
+                return None
 
-
+        return self.assignment
+    
 # Initializing the solver with a list of clauses
-clauses = ['x1', '~x2', 'x3'] # Example clauses
+clauses = [['x1', '~x2', 'x3'], ['~x1', 'x2', 'x3'], ['x1', '~x2', '~x3']] # Example clauses
 solver = SATSolver(clauses)
 solver.print_literals()  # Print literals and their dictionaries
 solver.print_clauses()  # Print list of clauses
 solution = solver.solve()
+print(solution)
