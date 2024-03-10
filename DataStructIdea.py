@@ -57,8 +57,8 @@ class SATSolver:
                 return None    #If conflict is detected, reutrn None for UNSAT and termiante loop
 
             # Check if all clauses are satisfied using self.clauses
-            if all(any(assignment[abs(lit)] for lit in clause) for clause in self.clauses):
-                return assignment
+            if all(any(self.assignment[abs(lit)] for lit in clause) for clause in self.clauses):
+                return self.assignment
 
             # If no conflict or satisfaction, make a decision
             variable = self.pick_unassigned_literal()  # Implement this function for decision-making
