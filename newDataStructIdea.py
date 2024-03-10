@@ -40,12 +40,6 @@ class SATSolver:
         self.decision_tree.append((literal, value))
         print(f"Decision: {literal} = {value}")
 
-    def solve(self):
-        """Solves the SAT formula using the specified rules."""
-        print("Solving SAT formula...")
-        self.unit_propagation(self.literals)
-        return self.assignment
-
     def backtrack(self):
         """Undo decisions and implications until reaching a decision that can be inverted."""
         while self.decision_tree:
@@ -69,6 +63,12 @@ class SATSolver:
             if clause_result == False:
                 return False
         return True
+    
+    def solve(self):
+        """Solves the SAT formula using the specified rules."""
+        print("Solving SAT formula...")
+        self.unit_propagation(self.literals)
+        return self.assignment
 
     def unit_propagation(self, literals):
         #Check for unit clauses
