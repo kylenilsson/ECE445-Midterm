@@ -32,6 +32,7 @@ class SATSolver:
         print("Clauses:")
         for clause in self.clauses:
             print(clause)
+        print(self.assignment)
 
     def decide(self, literal, value):
         """Make a decision and add it to the decision tree."""
@@ -41,36 +42,39 @@ class SATSolver:
 
     def solve(self):
         """Solves the SAT formula using the specified rules."""
+        print("Solving SAT formula...")
         self.unit_propagation(self.literals)
         return self.assignment
-    
+
     def backtrack(self):
         """Undo decisions and implications until reaching a decision that can be inverted."""
         while self.decision_tree:
             literal, value = self.decision_tree.pop()
             self.assignment[literal] = None
+            print(f"Backtrack: {literal} = {value}")
+  
+    def evaluateClauses(self):
+        """Evaluate the current assignment against the clauses."""
+        for clause in self.clauses:
+            clause_result = False
+            for literal in clause:
+                if literal[0] == '~':
+                    if self.assignment[literal[1:]] == False:
+                        clause_result = True
+                        break
+                else:
+                    if self.assignment[literal] == True:
+                        clause_result = True
+                        break
+            if clause_result == False:
+                return False
+        return True
 
     def unit_propagation(self, literals):
-        
-        while True:
-            unit_clauses = [clause for clause in self.clauses if len(clause) == 1]
-            if not unit_clauses:
-                break
-
-            unit_clause = unit_clauses[0]
-            literal = unit_clause[0]
-            value = True if literal[0] != '~' else False
-            literal = literal[1:] if literal[0] == '~' else literal
-            self.decide(literal, value)
-            self.clauses = [c for c in self.clauses if literal not in c]
-            self.clauses = [c for c in self.clauses if f"~{literal}" not in c]
-            self.unit_propagation(literals)
-
-            if all([len(c) == 0 for c in self.clauses]):
-                return None
+        #Check for unit clauses
 
         return self.assignment
-    
+
 # Initializing the solver with a list of clauses
 clauses = [['x1', '~x2', 'x3'], ['~x1', 'x2', 'x3'], ['x1', '~x2', '~x3']] # Example clauses
 solver = SATSolver(clauses)
