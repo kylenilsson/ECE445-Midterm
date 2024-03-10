@@ -18,6 +18,17 @@ class SATSolver:
         for literal in self.literals:        #Makes dictionary of literals all with an unassigned value. {x1: None, x2: None, ...}
             self.assignment[literal]= None
 
+    def print_literals(self):
+        """Prints out the list of literals and their dictionaries."""
+        print("Literals and their dictionaries:")
+        for literal, value in self.assignment.items():
+            print(f"{literal}: {value}")
+
+    def print_clauses(self):
+        """Prints out the list of clauses."""
+        print("Clauses:")
+        for clause in self.clauses:
+            print(clause)
 
  #   def add_clause(self, clause):
  #       """Add a new clause to the solver."""
@@ -115,6 +126,8 @@ class SATSolver:
 # Initializing the solver with a list of clauses
 clauses = [['x1', '~x2', 'x3'], ['~x1', 'x2', 'x3'], ['x1', '~x2', '~x3']] # Example clauses
 solver = SATSolver(clauses)
+solver.print_literals()  # Print literals and their dictionaries
+solver.print_clauses()  # Print list of clauses
 solution = solver.solve()
 
 if solution is None:
