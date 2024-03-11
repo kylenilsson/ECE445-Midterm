@@ -85,8 +85,7 @@ class SATSolver:
                 if len(unassigned_literals) == 1:
                     # Existing unit propagation logic...
                     literal = unassigned_literals[0]
-                    print(clause)
-                    print(literal)
+                    print("Unity Clause:", clause, "Unassigned Literal:", literal.strip('~'))
                     value = literal[0] != '~'
                     self.decide(literal.strip('~'), value)
                     changed = True
