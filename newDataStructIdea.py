@@ -1,25 +1,18 @@
-import random
-
 class SATSolver:
     def __init__(self, clauses):
         self.clauses = clauses
         self.assignment = {}
         self.decision_tree = []
-        self.literals = []
+        self.literals = set()
+        self.literal_clause_map = {}  # Mapping literals to clauses
 
-        # Initialize assignment with all literals set to None and extract literals from clauses
-        for item in self.clauses:
-            for i in item:
-                # Remove negation if present to ensure consistency
-                if i[0] == '~':
-                    literal = i[1:]
-                else:
-                    literal = i
-
-                if literal not in self.literals:
-                    self.literals.append(literal)
-                    # Initialize assignment with all literals set to None
-                    self.assignment[literal] = None
+        # Initialize and extract literals from clauses
+        for clause_index, clause in enumerate(self.clauses):
+            for literal in clause:
+                normalized_literal = literal.strip('~')
+                self.literals.add(normalized_literal)
+                self.assignment[normalized_literal] = None
+                self.literal_clause_map.setdefault(normalized_literal, []).append(clause_index)
 
     def print_literals(self):
         """Prints out the list of literals and their dictionaries."""
@@ -32,53 +25,74 @@ class SATSolver:
         print("Clauses:")
         for clause in self.clauses:
             print(clause)
-        print(self.assignment)
 
     def decide(self, literal, value):
         """Make a decision and add it to the decision tree."""
         self.assignment[literal] = value
         self.decision_tree.append((literal, value))
-        print(f"Decision: {literal} = {value}")
 
     def backtrack(self):
         """Undo decisions and implications until reaching a decision that can be inverted."""
+        if not self.decision_tree:
+            return False
+        
         while self.decision_tree:
             literal, value = self.decision_tree.pop()
-            self.assignment[literal] = None
-            print(f"Backtrack: {literal} = {value}")
-  
-    def evaluateClauses(self):
-        """Evaluate the current assignment against the clauses."""
+            self.assignment[literal] = None  # Undo the decision
+            if value is False:  # Try the opposite value if the last decision was False
+                self.decide(literal, True)
+                return True
+        return False
+
+    def is_solved(self):
+        """Checks if all clauses are satisfied and all variables are assigned."""
         for clause in self.clauses:
-            clause_result = False
-            for literal in clause:
-                if literal[0] == '~':
-                    if self.assignment[literal[1:]] == False:
-                        clause_result = True
-                        break
-                else:
-                    if self.assignment[literal] == True:
-                        clause_result = True
-                        break
-            if clause_result == False:
+            if not any(self.assignment.get(literal.strip('~'), False) != (literal[0] == '~') for literal in clause):
                 return False
-        return True
-    
+        return all(value is not None for value in self.assignment.values())
+
+    def has_contradiction(self):
+        """Checks if there's a contradiction with the current assignments."""
+        for clause in self.clauses:
+            if all(self.assignment.get(literal.strip('~'), False) == (literal[0] == '~') for literal in clause):
+                return True
+        return False
+
+    def unit_propagation(self):
+        changed = True
+        while changed:
+            changed = False
+            for clause_index, clause in enumerate(self.clauses):
+                unassigned_literals = [literal for literal in clause if self.assignment[literal.strip('~')] is None]
+                if len(unassigned_literals) == 1:
+                    literal = unassigned_literals[0]
+                    value = literal[0] != '~'
+                    self.decide(literal.strip('~'), value)
+                    changed = True
+                    break
+
     def solve(self):
-        """Solves the SAT formula using the specified rules."""
-        print("Solving SAT formula...")
-        self.unit_propagation(self.literals)
-        return self.assignment
+        self.unit_propagation()
+        if self.is_solved():
+            return self.assignment
+        if self.has_contradiction():
+            if not self.backtrack():
+                print("No solution found.")
+                return None
+        else:
+            for literal in self.literals:
+                if self.assignment[literal] is None:
+                    self.decide(literal, True)  # Make a decision
+                    result = self.solve()
+                    if result:
+                        return result
+                    self.backtrack()
+            print("No solution found after trying all options.")
+            return None
 
-    def unit_propagation(self, literals):
-        #Check for unit clauses
-
-        return self.assignment
-
-# Initializing the solver with a list of clauses
-clauses = [['x1', '~x2', 'x3'], ['~x1', 'x2', 'x3'], ['x1', '~x2', '~x3']] # Example clauses
+# Example test
+clauses = [['x1', '~x2', 'x3'], ['~x1', 'x2', 'x3'], ['x1', '~x2', '~x3']]
 solver = SATSolver(clauses)
-solver.print_literals()  # Print literals and their dictionaries
-solver.print_clauses()  # Print list of clauses
 solution = solver.solve()
-print(solution)
+print("Solution:", solution)
+ 
