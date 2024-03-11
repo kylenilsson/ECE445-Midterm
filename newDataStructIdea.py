@@ -30,6 +30,7 @@ class SATSolver:
         """Make a decision and add it to the decision tree."""
         self.assignment[literal] = value
         self.decision_tree.append((literal, value))
+        print(f"Decision: {literal} = {value}")
 
     def backtrack(self):
         """Undo decisions and implications until reaching a decision that can be inverted."""
@@ -58,14 +59,32 @@ class SATSolver:
                 return True
         return False
 
+    def is_clause_satisfied(self, clause):
+            """Checks if a clause is satisfied based on the current assignments."""
+            for literal in clause:
+                literal_value = literal.strip('~')
+                is_negated = literal.startswith('~')
+                assigned_value = self.assignment.get(literal_value)
+
+                # If the literal is assigned True and not negated, or assigned False and negated, the clause is SAT.
+                if assigned_value is not None and ((assigned_value and not is_negated) or (not assigned_value and is_negated)):
+                    return True
+            return False
+
     def unit_propagation(self):
         changed = True
         while changed:
             changed = False
             for clause_index, clause in enumerate(self.clauses):
+                if self.is_clause_satisfied(clause):
+                    continue  # Skip satisfied clauses
+                
                 unassigned_literals = [literal for literal in clause if self.assignment[literal.strip('~')] is None]
                 if len(unassigned_literals) == 1:
+                    # Existing unit propagation logic...
                     literal = unassigned_literals[0]
+                    print(clause)
+                    print(literal)
                     value = literal[0] != '~'
                     self.decide(literal.strip('~'), value)
                     changed = True
@@ -91,8 +110,10 @@ class SATSolver:
             return None
 
 # Example test
-clauses = [['x1', '~x2', 'x3'], ['~x1', 'x2', 'x3'], ['x1', '~x2', '~x3']]
+clauses = [['x1', '~x2', 'x3'], ['~x1', 'x2', 'x3'], ['x1', '~x2', '~x3'], ['~x1', 'x2', '~x3']]
 solver = SATSolver(clauses)
+#solver.print_literals()
+#solver.print_clauses()
 solution = solver.solve()
 print("Solution:", solution)
  
