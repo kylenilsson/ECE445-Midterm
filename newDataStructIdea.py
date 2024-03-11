@@ -1,3 +1,5 @@
+import random
+
 class SATSolver:
     def __init__(self, clauses):
         self.clauses = clauses
@@ -101,7 +103,7 @@ class SATSolver:
         else:
             for literal in self.literals:
                 if self.assignment[literal] is None:
-                    self.decide(literal, True)  # Make a decision
+                    self.decide(literal, random.choice([True,False]))  # Make a decision
                     result = self.solve()
                     if result:
                         return result
