@@ -36,11 +36,13 @@ class SATSolver:
 
     def backtrack(self):
         """Undo decisions and implications until reaching a decision that can be inverted."""
+        print("Backtracking...")
         if not self.decision_tree:
             return False
         
         while self.decision_tree:
             literal, value = self.decision_tree.pop()
+            print(f"Undo decision: {literal} = {value}")
             self.assignment[literal] = None  # Undo the decision
             if value is False:  # Try the opposite value if the last decision was False
                 self.decide(literal, True)
