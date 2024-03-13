@@ -60,6 +60,7 @@ class SATSolver:
         """Checks if there's a contradiction with the current assignments."""
         for clause in self.clauses:
             if all(self.assignment.get(literal.strip('~'), False) == (literal[0] == '~') for literal in clause):
+                print("Contradiction:", clause)
                 return True
         return False
 
@@ -113,7 +114,16 @@ class SATSolver:
             return None
 
 # Example test
-clauses = [['x1', '~x2', 'x3'], ['~x1', 'x2', 'x3'], ['x1', '~x2', '~x3'], ['~x1', 'x2', '~x3']]
+#clauses = [['x1', '~x2', 'x3'], ['~x1', 'x2', 'x3'], ['x1', '~x2', '~x3'], ['~x1', 'x2', '~x3']]
+#clauses = [['~x1', '~x2'], ['x1', 'x2'], ['x1', '~x2'], ['~x1', 'x2']]
+clauses = [['~x1', '~x2', '~x3'],
+            ['~x1', '~x2', 'x3'],
+            ['~x1', 'x2', '~x3'],
+            ['~x1', 'x2', 'x3'],
+            ['x1', '~x2', '~x3'],
+            ['x1', '~x2', 'x3'],
+            #['x1', 'x2', '~x3'],
+            ['x1', 'x2', 'x3']]
 solver = SATSolver(clauses)
 #solver.print_literals()
 #solver.print_clauses()
