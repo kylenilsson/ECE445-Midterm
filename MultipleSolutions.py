@@ -107,7 +107,6 @@ class SATSolver:
 
             # Generate a new clause that negates the current solution
             new_negated_clause = [f"~{lit}" if val else lit for lit, val in solution.items()]
-            print("Negated Clause:", new_negated_clause)
             negated_clauses.append(new_negated_clause)
 
         return all_solutions
