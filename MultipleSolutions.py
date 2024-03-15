@@ -83,7 +83,7 @@ class SATSolver:
             else:
                 for literal in self.literals:
                     if self.assignment[literal] is None:
-                        self.decide(literal, random.choice([True, False]))
+                        self.decide(literal, False)
                         break
                     
         return self.assignment if self.is_solved() else None
@@ -107,6 +107,7 @@ class SATSolver:
 
             # Generate a new clause that negates the current solution
             new_negated_clause = [f"~{lit}" if val else lit for lit, val in solution.items()]
+            print("Negated Clause:", new_negated_clause)
             negated_clauses.append(new_negated_clause)
 
         return all_solutions
