@@ -64,22 +64,28 @@ class SATSolver:
                     changed = True
                     break
 
+    def back_track(self):
+        if not self.decision_tree:
+            print("No solution found.")
+            return False
+        # Backtrack: undo decisions until one can be flipped
+        while self.decision_tree:
+            literal, value = self.decision_tree.pop()
+            self.assignment[literal] = None  # Undo decision
+            if value is False:  # Flip decision if possible
+                self.decide(literal, True)
+                return True
+        return False
+
     def solve(self):
         self.unit_propagation()
     
         while not self.is_solved():
             if self.has_contradiction():
                 # No decision to backtrack to, unsolvable
-                if not self.decision_tree:
+                if not self.back_track():
                     return None
-    
-                # Backtrack: undo decisions until one can be flipped
-                while self.decision_tree:
-                    literal, value = self.decision_tree.pop()
-                    self.assignment[literal] = None  # Undo decision
-                    if value is False:  # Flip decision if possible
-                        self.decide(literal, True)
-                        break
+
             else:
                 for literal in self.literals:
                     if self.assignment[literal] is None:
@@ -97,10 +103,11 @@ class SATSolver:
             # Create a new SATSolver instance with the original clauses plus any negated clauses
             solver = SATSolver(original_clauses + negated_clauses)
             solution = solver.solve()
+            print("Solution:", solution)
             
             if solution is None:
                 break  # No more solutions found
-            print(len(all_solutions) + 1, "solution(s) found:", solution)
+            #print(len(all_solutions) + 1, "solution(s) found:", solution)
             # Convert the solution to a unique string representation and add it to the list of all solutions
             solution_str = ''.join(f"{lit}:{'T' if val else 'F'}" for lit, val in sorted(solution.items()))
             all_solutions.append(solution_str)
