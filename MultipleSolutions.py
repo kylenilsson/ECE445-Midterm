@@ -79,14 +79,12 @@ class SATSolver:
                     self.assignment[literal] = None  # Undo decision
                     if value is False:  # Flip decision if possible
                         self.decide(literal, True)
-                        self.decision_tree.append(random.choice([(literal, True), (literal, False)]))
                         break
             else:
                 for literal in self.literals:
                     if self.assignment[literal] is None:
-                        decision = (literal, False)
+                        decision = (literal, random.choice([True, False]))
                         self.decide(*decision)
-                        self.decision_tree.append(decision)
                         break
                     
         return self.assignment if self.is_solved() else None
