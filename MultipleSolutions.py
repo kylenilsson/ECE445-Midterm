@@ -22,11 +22,11 @@ class SATSolver:
         self.decision_tree.append((literal, value))
 
     def is_solved(self):
-        """Checks if all clauses are satisfied and all variables are assigned."""
+        """Checks if all clauses are satisfied with at least one literal being true in each."""
         for clause in self.clauses:
             if not any(self.assignment.get(literal.strip('~'), False) != (literal[0] == '~') for literal in clause):
-                return False
-        return all(value is not None for value in self.assignment.values())
+                return False  # At least one clause is not satisfied
+        return True  # All clauses are satisfied
 
     def has_contradiction(self):
         """Checks if there's a contradiction with the current assignments."""
@@ -62,11 +62,11 @@ class SATSolver:
                     value = literal[0] != '~'
                     self.decide(literal.strip('~'), value)
                     changed = True
+                    print(f"Unit propagation: {literal} = {value}")
                     break
 
     def back_track(self):
         if not self.decision_tree:
-            print("No solution found.")
             return False
         # Backtrack: undo decisions until one can be flipped
         while self.decision_tree:
@@ -78,21 +78,32 @@ class SATSolver:
         return False
 
     def solve(self):
-        self.unit_propagation()
-    
-        while not self.is_solved():
+        while True:
+            # Run unit propagation at the start of each iteration
+            self.unit_propagation()
+            
             if self.has_contradiction():
-                # No decision to backtrack to, unsolvable
+                # Attempt to backtrack; if not possible, the problem is unsolvable
                 if not self.back_track():
                     return None
-
             else:
+                # Try to make a new decision
+                made_decision = False
                 for literal in self.literals:
                     if self.assignment[literal] is None:
                         self.decide(literal, False)
+                        made_decision = True
                         break
                     
-        return self.assignment if self.is_solved() else None
+                # If no new decision was made, check if all clauses are satisfied
+                if not made_decision:
+                    if self.is_solved():
+                        return self.assignment
+                    else:
+                        # If not all clauses are satisfied, attempt to backtrack
+                        if not self.back_track():
+                            return None
+
 
     def find_all_solutions(self):
         all_solutions = []
@@ -103,11 +114,9 @@ class SATSolver:
             # Create a new SATSolver instance with the original clauses plus any negated clauses
             solver = SATSolver(original_clauses + negated_clauses)
             solution = solver.solve()
-            print("Solution:", solution)
             
             if solution is None:
                 break  # No more solutions found
-            #print(len(all_solutions) + 1, "solution(s) found:", solution)
             # Convert the solution to a unique string representation and add it to the list of all solutions
             solution_str = ''.join(f"{lit}:{'T' if val else 'F'}" for lit, val in sorted(solution.items()))
             all_solutions.append(solution_str)
@@ -119,16 +128,22 @@ class SATSolver:
         return all_solutions
         
 # Example usage:
-clauses = [['~x1', '~x2', '~x3'],
-            ['~x1', '~x2', 'x3'],
-            ['~x1', 'x2', '~x3'],
-            ['~x1', 'x2', 'x3'],
-            ['x1', '~x2', '~x3'],
-            ['x1', '~x2', 'x3'],
-            #['x1', 'x2', '~x3'],
-            ['x1', 'x2', 'x3']]
+clauses = [
+    ['~x1', '~x2', '~x3'],
+    ['~x1', '~x2', 'x3'],
+    ['~x1', 'x2', '~x3'],
+    ['~x1', 'x2', 'x3'],
+    #['x1', '~x2', '~x3'],
+    #['x1', '~x2', 'x3'],
+    #['x1', 'x2', '~x3'],
+    #['x1', 'x2', 'x3'],
+]
 
 solver = SATSolver(clauses)
 
 solutions = solver.find_all_solutions()
-print(len(solutions), "solutions found.")
+if not solutions:
+    print("UNSAT")
+else:
+    print("SAT, ", len(solutions), "solutions found.")
+    print("All solutions:", solutions)
