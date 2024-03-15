@@ -83,8 +83,7 @@ class SATSolver:
             else:
                 for literal in self.literals:
                     if self.assignment[literal] is None:
-                        decision = (literal, random.choice([True, False]))
-                        self.decide(*decision)
+                        self.decide(literal, random.choice([True, False]))
                         break
                     
         return self.assignment if self.is_solved() else None
@@ -101,7 +100,7 @@ class SATSolver:
             
             if solution is None:
                 break  # No more solutions found
-            print(len(all_solutions) + 1, "solution found:", solution)
+            print(len(all_solutions) + 1, "solution(s) found:", solution)
             # Convert the solution to a unique string representation and add it to the list of all solutions
             solution_str = ''.join(f"{lit}:{'T' if val else 'F'}" for lit, val in sorted(solution.items()))
             all_solutions.append(solution_str)
