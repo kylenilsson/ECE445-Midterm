@@ -64,7 +64,6 @@ class SATSolver:
                     self.decide(literal.strip('~'), value)
                     #print(f"Unit propagation: {literal} = {value}")
                     changed = True
-                    #print(f"Unit propagation: {literal} = {value}")
                     break
 
     def back_track(self):
