@@ -17,7 +17,7 @@ def sop_to_pos(sop_expression):
                 pos_term.append('~' + literal)
 
         # Convert the list of literals to a PoS term
-        CNF_terms.append(pos_term)
+        #CNF_terms.append(pos_term)
         pos_terms.append(' + '.join(pos_term))
 
     # Combine the PoS terms to form the final PoS expression
@@ -31,4 +31,4 @@ CNF_terms = []
 sop_expression = "~x1.x2.~x3 + x1.~x2.~x3 + ~x1.x2.x3"
 pos_expression = sop_to_pos(sop_expression)
 print("PoS expression:", pos_expression)
-print("Clause List:", CNF_terms)
+#print("Clause List:", CNF_terms)
