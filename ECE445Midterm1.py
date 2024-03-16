@@ -1,157 +1,167 @@
-# Python code to convert standard SOP form  
-# to standard POS form  
-  
-# function to calculate no. of variables  
-# used in SOP expression  
-def count_no_alphabets(SOP):  
-    i = 0
-    no_var = 0
-  
-    # As expression is standard so total no.  
-    # of alphabets will be equal  
-    # to alphabets before first '+' character  
-    while (SOP[i]!='+'):  
-  
-        # checking if character is alphabet              
-        if (SOP[i].isalpha()):      
-            no_var+= 1
-        i+= 1
-    return no_var  
-  
-# function to calculate the min terms in integers  
-def Cal_Min_terms(Min_terms, SOP):  
-    a =""  
-    i = 0
-    while (i<len(SOP)):  
-        if (SOP[i]=='+'):  
-  
-            # converting binary to decimal                  
-            b = int(a, 2)  
-  
-            # insertion of each min term(integer) into the list                  
-            Min_terms.append(b)  
-  
-            # empty the string          
-            a =""                          
-            i+= 1
-        else:  
-  
-            # checking whether variable is complemented or not  
-            if(i + 1 != len(SOP) and SOP[i + 1]=="'"):  
-  
-                # concatenating the string with '0'  
-                a+='0'  
-  
-                # incrementing by 2 because 1 for alphabet and  
-                # another for "'"                        
-                i+= 2                            
-            else:  
-  
-                # concatenating the string with '1'  
-                a+='1'                        
-                i+= 1
-  
-    # insertion of last min term(integer) into the list      
-    Min_terms.append(int(a, 2))              
-  
-# function to calculate the max terms in binary then  
-# calculate POS form of SOP  
-def Cal_Max_terms(Min_terms, no_var, start_alphabet):  
-  
-    # declaration of the list  
-    Max_terms =[]  
-  
-    # calculation of total no. of terms that can be  
-    # formed by no_var variables                      
-    max = 2**no_var                  
-    for i in range(0, max):  
-  
-        # checking whether the term is not  
-        # present in the min terms  
-        if (Min_terms.count(i)== 0):  
-  
-            # converting integer to binary and then  
-            # taking the value from 2nd index as 1st  
-            # two index contains '0b'  
-            b = bin(i)[2:]  
-  
-            # loop used for inserting 0's before the  
-            # binary value so that its length will be  
-            # equal to no. of variables present in  
-            # each product term          
-            while(len(b)!= no_var):  
-                b ='0'+b  
-  
-            # appending the max terms(integer) in the list  
-            Max_terms.append(b)      
-  
-    POS =""  
-  
-    # loop till there are max terms                          
-    for i in Max_terms:  
-  
-        # before every sum term append POS by '('          
-        POS = POS+"("
-  
-        # acquire the starting variable came from  
-        # main function in every sum term              
-        value = start_alphabet  
-  
-        # loop till there are 0's or 1's in each max term      
-        for j in i:  
-  
-            # checking for complement variable to be used                  
-            if (j =='1'):  
-  
-                # concatenating value, ' and + in string POS                  
-                POS = POS + value+"'+"
-  
-            # checking for uncomplement variable to be used      
-            else:  
-  
-                # concatenating value and + in string POS                      
-                POS = POS + value+"+"
-  
-            # increment the alphabet by 1      
-            value = chr(ord(value)+1)  
-  
-        # for discarding the extra '+' in the last      
-        POS = POS[:-1]  
-  
-        # appending the POS string by ')." after  
-        # every sum term                  
-        POS = POS+")."
-  
-    # for discarding the extra '.' in the last                      
-    POS = POS[:-1]                          
-    return POS  
-  
-# main function  
-def main():  
-    # input1  
-    SOP_expr ="ABC'+A'BC + ABC + AB'C"
-    Min_terms =[]  
-    no_var = count_no_alphabets(SOP_expr)  
-    Cal_Min_terms(Min_terms, SOP_expr)  
-    POS_expr = Cal_Max_terms(Min_terms, no_var, SOP_expr[0])  
-    print ("Standard POS form of", SOP_expr, " ==> ", POS_expr)  
-  
-    # input2  
-    SOP_expr ="A'B + AB'"
-    Min_terms =[]  
-    no_var = count_no_alphabets(SOP_expr)  
-    Cal_Min_terms(Min_terms, SOP_expr)  
-    POS_expr = Cal_Max_terms(Min_terms, no_var, SOP_expr[0])  
-    print ("Standard POS form of", SOP_expr, " ==> ", POS_expr)  
-      
-    # input3  
-    SOP_expr ="xyz'+x'y'z'+xy'z"
-    Min_terms =[]  
-    no_var = count_no_alphabets(SOP_expr)  
-    Cal_Min_terms(Min_terms, SOP_expr)  
-    POS_expr = Cal_Max_terms(Min_terms, no_var, SOP_expr[0])  
-    print ("Standard POS form of", SOP_expr, " ==> ", POS_expr ) 
-  
-# driver code      
-if __name__=="__main__":  
-    main()  
+import random
+
+class SATSolver:
+    def __init__(self, clauses):
+        self.clauses = clauses
+        self.assignment = {}
+        self.decision_tree = []
+        self.literals = set()
+        self.literal_clause_map = {}  # Mapping literals to clauses
+        self.solutions = []
+
+        # Initialize and extract literals from clauses
+        for clause_index, clause in enumerate(self.clauses):
+            for literal in clause:
+                normalized_literal = literal.strip('~')
+                self.literals.add(normalized_literal)
+                self.assignment[normalized_literal] = None
+                self.literal_clause_map.setdefault(normalized_literal, []).append(clause_index) #clause_map looks like {x1: [0,1,2,3,4,5], x2: ...}. Keeps track of the clauses with that literal.
+
+    def print_literals(self):
+        """Prints out the list of literals and their dictionaries."""
+        print("Literals and their dictionaries:")
+        for literal, value in self.assignment.items():
+            print(f"{literal}: {value}")
+
+    def print_clauses(self):
+        """Prints out the list of clauses."""
+        print("Clauses:")
+        for clause in self.clauses:
+            print(clause)
+
+    def decide(self, literal, value):
+        """Make a decision and add it to the decision tree."""
+        self.assignment[literal] = value
+        self.decision_tree.append((literal, value))
+        print(f"Decision: {literal} = {value}")
+
+    def backtrack(self):
+        """Undo decisions and implications until reaching a decision that can be inverted."""
+        print("Backtracking...")
+        if not self.decision_tree:
+            return False
+        
+        while self.decision_tree:
+            literal, value = self.decision_tree.pop()
+            print(f"Undo decision: {literal} = {value}")
+            self.assignment[literal] = None  # Undo the decision
+            if value is False:  # Try the opposite value if the last decision was False
+                self.decide(literal, True)
+                return True
+        return False
+
+    def is_solved(self):
+        """Checks if all clauses are satisfied and all variables are assigned."""
+        for clause in self.clauses:
+            if not any(self.assignment.get(literal.strip('~'), False) != (literal[0] == '~') for literal in clause):
+                return False
+       #I believe not all literals have to be assigned as we are asked for the smallest SAT combo.
+        return all(value is not None for value in self.assignment.values())
+
+    def has_contradiction(self):
+        """Checks if there's a contradiction with the current assignments."""
+        for clause in self.clauses:
+            if all(self.assignment.get(literal.strip('~'), False) == (literal[0] == '~') for literal in clause):
+                print("Contradiction:", clause)
+                return True
+        return False
+
+    def is_clause_satisfied(self, clause):
+            """Checks if a clause is satisfied based on the current assignments."""
+            for literal in clause:
+                literal_value = literal.strip('~')
+                is_negated = literal.startswith('~')
+                assigned_value = self.assignment.get(literal_value)
+
+                # If the literal is assigned True and not negated, or assigned False and negated, the clause is SAT.
+                if assigned_value is not None and ((assigned_value and not is_negated) or (not assigned_value and is_negated)):
+                    return True
+            return False
+
+    def unit_propagation(self):
+        """Checks for a unity clause and assigns the correct value to the one literal to satisfy clause"""
+        changed = True #Flag to determine if we found a unity clause an update the value
+        while changed:
+            changed = False 
+            for clause_index, clause in enumerate(self.clauses):
+                if self.is_clause_satisfied(clause):
+                    continue  # Skip satisfied clauses
+                
+                unassigned_literals = [literal for literal in clause if self.assignment[literal.strip('~')] is None]
+                if len(unassigned_literals) == 1:
+                    # Existing unit propagation logic...
+                    literal = unassigned_literals[0]
+                    print("Unity Clause:", clause, "Unassigned Literal:", literal.strip('~'))
+                    value = literal[0] != '~'  #Returns the correct value to make it SAT with that clause
+                    self.decide(literal.strip('~'), value)
+                    changed = True
+                    break
+
+    def solve(self):
+        self.unit_propagation() #Assings the value to literal if it detects a unity clause
+        if self.is_solved():
+            return self.assignment
+        if self.has_contradiction():
+            if not self.backtrack():
+                print("No solution found.")
+                return None
+        else:
+            for literal in self.literals:
+                if self.assignment[literal] is None:
+                    self.decide(literal, random.choice([True,False]))  # Make a decision
+                    result = self.solve()
+                    if result:
+                        return result
+                    self.backtrack()
+            print("No solution found after trying all options.")
+            return None
+        
+def sop_to_pos(sop_expression):
+    # Split the SoP expression into terms
+    sop_terms = sop_expression.split(' + ')
+
+    pos_terms = []
+    for sop_term in sop_terms:
+        # Split each term into its seperated literals
+        literals = sop_term.split('.')
+        pos_term = []
+
+        # For each literal in the SoP term take its compliment
+        for literal in literals:
+            # Handle negated literals
+            if literal.startswith('~'):
+                pos_term.append(literal[1:])
+            else:
+                pos_term.append('~' + literal)
+
+        # Convert the list of literals to a PoS term
+        CNF_terms.append(pos_term)
+        pos_terms.append(' + '.join(pos_term))
+
+    # Combine the PoS terms to form the final PoS expression
+    pos_expression = '('
+    pos_expression += ') . ('.join(pos_terms)
+    pos_expression += ')'
+    return CNF_terms
+
+
+# Example usage:
+#sop_expression = "~x1.x2.~x3 + x1.~x2.~x3 + ~x1.x2.x3"
+#pos_expression = sop_to_pos(sop_expression)
+#print("PoS expression:", pos_expression)
+#print("Clause List:", CNF_terms)
+
+# Example test
+#clauses = [['x1', '~x2', 'x3'], ['~x1', 'x2', 'x3'], ['x1', '~x2', '~x3'], ['~x1', 'x2', '~x3']]
+#clauses = [['~x1', '~x2'], ['x1', 'x2'], ['x1', '~x2'], ['~x1', 'x2']]
+
+CNF_terms = []
+input = input()
+clauses = sop_to_pos(input)
+print("CLause list: ", CNF_terms)
+
+solver = SATSolver(clauses)
+#solver.print_literals()
+#solver.print_clauses()
+solution = solver.solve()
+print("Solution:", solution)
