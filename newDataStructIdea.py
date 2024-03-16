@@ -7,6 +7,7 @@ class SATSolver:
         self.decision_tree = []
         self.literals = set()
         self.literal_clause_map = {}  # Mapping literals to clauses
+        self.solutions = []
 
         # Initialize and extract literals from clauses
         for clause_index, clause in enumerate(self.clauses):
@@ -14,7 +15,7 @@ class SATSolver:
                 normalized_literal = literal.strip('~')
                 self.literals.add(normalized_literal)
                 self.assignment[normalized_literal] = None
-                self.literal_clause_map.setdefault(normalized_literal, []).append(clause_index)
+                self.literal_clause_map.setdefault(normalized_literal, []).append(clause_index) #clause_map looks like {x1: [0,1,2,3,4,5], x2: ...}. Keeps track of the clauses with that literal.
 
     def print_literals(self):
         """Prints out the list of literals and their dictionaries."""
@@ -54,6 +55,7 @@ class SATSolver:
         for clause in self.clauses:
             if not any(self.assignment.get(literal.strip('~'), False) != (literal[0] == '~') for literal in clause):
                 return False
+       #I believe not all literals have to be assigned as we are asked for the smallest SAT combo.
         return all(value is not None for value in self.assignment.values())
 
     def has_contradiction(self):
@@ -77,9 +79,10 @@ class SATSolver:
             return False
 
     def unit_propagation(self):
-        changed = True
+        """Checks for a unity clause and assigns the correct value to the one literal to satisfy clause"""
+        changed = True #Flag to determine if we found a unity clause an update the value
         while changed:
-            changed = False
+            changed = False 
             for clause_index, clause in enumerate(self.clauses):
                 if self.is_clause_satisfied(clause):
                     continue  # Skip satisfied clauses
@@ -89,13 +92,13 @@ class SATSolver:
                     # Existing unit propagation logic...
                     literal = unassigned_literals[0]
                     print("Unity Clause:", clause, "Unassigned Literal:", literal.strip('~'))
-                    value = literal[0] != '~'
+                    value = literal[0] != '~'  #Returns the correct value to make it SAT with that clause
                     self.decide(literal.strip('~'), value)
                     changed = True
                     break
 
     def solve(self):
-        self.unit_propagation()
+        self.unit_propagation() #Assings the value to literal if it detects a unity clause
         if self.is_solved():
             return self.assignment
         if self.has_contradiction():
