@@ -62,7 +62,7 @@ class SATSolver:
                     literal = unassigned_literals[0]
                     value = literal[0] != '~'
                     self.decide(literal.strip('~'), value)
-                    print(f"Unit propagation: {literal} = {value}")
+                    #print(f"Unit propagation: {literal} = {value}")
                     changed = True
                     #print(f"Unit propagation: {literal} = {value}")
                     break
@@ -74,7 +74,7 @@ class SATSolver:
         while self.decision_tree:
             literal, value = self.decision_tree.pop()
             self.assignment[literal] = None  # Undo decision
-            print(f"Backtrack: {literal} = {value}")
+            #print(f"Backtrack: {literal} = {value}")
             if value is False:  # Flip decision if possible
                 self.decide(literal, True)
                 return True
@@ -101,7 +101,7 @@ class SATSolver:
                 # If no new decision was made, check if all clauses are satisfied
                 if not made_decision:
                     if self.is_solved():
-                        print("Solved!")
+                        #print("Solved!")
                         return self.assignment
                     else:
                         # If not all clauses are satisfied, attempt to backtrack
