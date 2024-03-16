@@ -122,8 +122,7 @@ class SATSolver:
             if solution is None:
                 break  # No more solutions found
             # Convert the solution to a unique string representation and add it to the list of all solutions
-            solution_str = ''.join(f"{lit}:{'T' if val else 'F'}" for lit, val in sorted(solution.items()))
-            all_solutions.append(solution_str)
+            all_solutions.append(solution)
 
             # Generate a new clause that negates the current solution
             new_negated_clause = [f"~{lit}" if val else lit for lit, val in solution.items()]
@@ -150,5 +149,5 @@ solutions = solver.find_all_solutions()
 if not solutions:
     print("UNSAT")
 else:
-    print("SAT, ", len(solutions), "solutions found.")
-    print("All solutions:", solutions)
+    for solution in solutions:
+        print("SAT:", solution)
