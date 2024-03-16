@@ -20,6 +20,7 @@ class SATSolver:
         """Make a decision and add it to the decision tree."""
         self.assignment[literal] = value
         self.decision_tree.append((literal, value))
+        #print(self.decision_tree)
 
     def is_solved(self):
         """Checks if all clauses are satisfied with at least one literal being true in each."""
@@ -61,8 +62,9 @@ class SATSolver:
                     literal = unassigned_literals[0]
                     value = literal[0] != '~'
                     self.decide(literal.strip('~'), value)
-                    changed = True
                     print(f"Unit propagation: {literal} = {value}")
+                    changed = True
+                    #print(f"Unit propagation: {literal} = {value}")
                     break
 
     def back_track(self):
@@ -72,6 +74,7 @@ class SATSolver:
         while self.decision_tree:
             literal, value = self.decision_tree.pop()
             self.assignment[literal] = None  # Undo decision
+            print(f"Backtrack: {literal} = {value}")
             if value is False:  # Flip decision if possible
                 self.decide(literal, True)
                 return True
@@ -98,6 +101,7 @@ class SATSolver:
                 # If no new decision was made, check if all clauses are satisfied
                 if not made_decision:
                     if self.is_solved():
+                        print("Solved!")
                         return self.assignment
                     else:
                         # If not all clauses are satisfied, attempt to backtrack
@@ -114,6 +118,7 @@ class SATSolver:
             # Create a new SATSolver instance with the original clauses plus any negated clauses
             solver = SATSolver(original_clauses + negated_clauses)
             solution = solver.solve()
+            #print("Solution:", solution)
             
             if solution is None:
                 break  # No more solutions found
